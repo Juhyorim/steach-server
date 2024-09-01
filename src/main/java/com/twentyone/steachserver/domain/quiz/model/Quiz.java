@@ -41,12 +41,12 @@ public class Quiz {
     @OneToMany(mappedBy = "quiz")
     private List<QuizChoice> quizChoices = new ArrayList<>();
 
-    public static Quiz createQuiz(QuizRequestDto request, Lecture lecture) {
+    public static Quiz createQuiz(String question, Integer quizNumber, Integer time, Lecture lecture) {
         Quiz quiz = new Quiz();
         quiz.setLecture(lecture);
-        quiz.setQuestion(request.getQuestion());
-        quiz.setQuizNumber((request.getQuizNumber() == null || request.getQuizNumber()== 0)? lecture.getQuizzes().size() + 1 : request.getQuizNumber());
-        quiz.setTime(request.getTime());
+        quiz.setQuestion(question);
+        quiz.setQuizNumber((quizNumber == null || quizNumber== 0)? lecture.getQuizzes().size() + 1 : quizNumber);
+        quiz.setTime(time);
 
         lecture.addQuiz(quiz);
         return quiz;

@@ -17,6 +17,7 @@ import com.twentyone.steachserver.domain.quiz.dto.QuizRequestDto;
 import com.twentyone.steachserver.domain.quiz.dto.QuizResponseDto;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
+import com.twentyone.steachserver.domain.quiz.repository.QuizRepository;
 import java.time.LocalTime;
 
 import com.twentyone.steachserver.domain.quiz.service.QuizService;
@@ -36,12 +37,16 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 @DisplayName("퀴즈 통합 테스트")
-public class QuizIntegrationTest extends IntegrationTest {
+@Transactional
+@SpringBootTest
+public class QuizIntegrationTest {
     public static final String CHOICE1 = "asdf";
     public static final String CHOICE2 = "qwer";
     public static final int QUIZ_NUMBER = 1;
@@ -54,6 +59,10 @@ public class QuizIntegrationTest extends IntegrationTest {
     TeacherRepository teacherRepository;
     @Autowired
     StudentRepository studentRepository;
+
+    @Autowired
+    QuizRepository quizRepository;
+
     @Autowired
     private CurriculumDetailRepository curriculumDetailRepository;
     @Autowired
@@ -94,6 +103,23 @@ public class QuizIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    @DisplayName("단일 퀴즈 생성")
+    void createOneQuiz() {
+        //given
+        QuizRequestDto quizRequestDto = QuizRequestDto.of(1, "질문", List.of("답1", "답2"), 1, 5);
+
+        //when
+        QuizResponseDto oneQuiz = quizService.createOneQuiz(teacher, lecture.getId(), quizRequestDto);
+
+        //then
+        assertEquals(quizRequestDto.getQuizNumber(), oneQuiz.getQuizNumber());
+        assertEquals(quizRequestDto.getChoices(), oneQuiz.getChoices());
+        assertEquals(quizRequestDto.getAnswers(), oneQuiz.getAnswers());
+        assertEquals(quizRequestDto.getQuestion(), oneQuiz.getQuestion());
+        assertEquals(quizRequestDto.getTime(), oneQuiz.getTime());
+    }
+
+    @Test
     void 퀴즈생성() throws Exception {
         //given
         List<QuizRequestDto> quizRequestDtoList = new ArrayList<>();
@@ -119,6 +145,7 @@ public class QuizIntegrationTest extends IntegrationTest {
             assertEquals(quizRequestDto.getQuizNumber(), quizRequestDto.getQuizNumber());
             assertEquals(quizRequestDto.getQuestion(), quizRequestDto.getQuestion());
             assertEquals(quizRequestDto.getChoices().size(), quizRequestDto.getChoices().size());
+
             for (int j=0; j<quizRequestDto.getChoices().size(); j++) {
                 assertEquals(quizRequestDto.getChoices().get(j), quizResponseDto.getChoices().get(j));
             }

@@ -33,7 +33,7 @@ public class QuizResponseDto {
                 quiz.getTime(),
                 quiz.getQuestion(),
                 choices,
-                answers+1 //클라이언트에는 +1해서 주기
+                answers //클라이언트에는 +1해서 주기
         );
     }
 
@@ -49,7 +49,7 @@ public class QuizResponseDto {
                 quiz.getTime(),
                 quiz.getQuestion(),
                 quiz.getQuizChoiceString(),
-                quiz.getAnswer()+1  //클라이언트에는 +1해서 주기
+                quiz.getAnswer()  //클라이언트에는 +1해서 주기
         );
     }
 }

@@ -23,7 +23,7 @@ import java.util.List;
  *   ] // 중복가능
  * }
  */
-@AllArgsConstructor
+@AllArgsConstructor //TODO 삭제
 @NoArgsConstructor
 public class QuizRequestDto {
     private Integer quizNumber;
@@ -47,10 +47,21 @@ public class QuizRequestDto {
     }
 
     public Integer getAnswers() {
-        return answers - 1; //서버용
+        return answers; //서버용
     }
 
     public Integer getTime() {
         return time;
+    }
+
+    public static QuizRequestDto of(Integer quizNumber, String question, List<String> choices, Integer answers, Integer time) {
+        QuizRequestDto quizRequestDto = new QuizRequestDto();
+        quizRequestDto.quizNumber = quizNumber;
+        quizRequestDto.question = question;
+        quizRequestDto.choices = choices;
+        quizRequestDto.answers = answers;
+        quizRequestDto.time = time;
+
+        return quizRequestDto;
     }
 }

@@ -31,10 +31,19 @@ public class  QuizServiceImpl implements QuizService {
     private final QuizRepository quizRepository;
     private final LectureRepository lectureRepository;
     private final QuizChoiceService quizChoiceService;
-    private final QuizValidator quizValidator;
-    private final QuizChoiceValidator quizChoiceValidator;
     private final StudentQuizRepository studentQuizRepository;
-    private final QuizStatisticsRepository quizStatisticsRepository;
+    private final QuizChoiceValidator quizChoiceValidator;
+//    private final QuizStatisticsRepository quizStatisticsRepository;
+//    private final QuizValidator quizValidator;
+
+    @Override
+    @Transactional
+    public QuizResponseDto createOneQuiz(Teacher teacher, Integer lectureId, QuizRequestDto request) {
+        Lecture lecture = getLecture(lectureId);
+        Quiz quiz = createQuiz(lecture, request);
+
+        return QuizResponseDto.fromDomain(quiz);
+    }
 
     @Override
     @Transactional
@@ -58,21 +67,22 @@ public class  QuizServiceImpl implements QuizService {
         return QuizListResponseDto.fromDomainList(quizList);
     }
 
-    @Override
     @Transactional
     public Quiz createQuiz(Lecture lecture, QuizRequestDto quizRequestDto) {
+        //유효성 검사
+        quizChoiceValidator.validateQuizChoices(quizRequestDto.getChoices(), quizRequestDto.getAnswers());
+
         //퀴즈 생성
-        Quiz quiz = Quiz.createQuiz(quizRequestDto, lecture);
+        Quiz quiz = Quiz.createQuiz(
+                quizRequestDto.getQuestion(),
+                quizRequestDto.getQuizNumber(),
+                quizRequestDto.getTime(),
+                lecture
+        );
         quiz = quizRepository.save(quiz);
 
+        //QuizChoice 생성
         List<String> choices = quizRequestDto.getChoices();
-
-        //클라이언트 인덱스 유효성 검사
-        if (quizRequestDto.getAnswers() >= choices.size() || quizRequestDto.getAnswers() < 0) {
-            throw new IllegalArgumentException("정답관련 인덱스가 유효하지 않습니다.");
-        }
-
-        // Create and save QuizChoice entities
         List<QuizChoice> quizChoices = quizChoiceService.createQuizChoices(choices, quizRequestDto.getAnswers(), quiz);
         quiz.addChoiceList(quizChoices);
 

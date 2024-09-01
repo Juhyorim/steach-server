@@ -1,5 +1,6 @@
 package com.twentyone.steachserver.domain.quiz.validator;
 
+import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -8,9 +9,13 @@ import java.util.List;
 public class QuizChoiceValidator {
 
     public void validateQuizChoices(List<String> choices, int answers) {
+        //퀴즈 정답 인덱스 유효성 검사
+        if (answers>= choices.size() || answers < 0) {
+            throw new IllegalArgumentException("정답관련 인덱스가 유효하지 않습니다.");
+        }
+
         validateNull(choices, "Choices");
         validateEmptyList(choices, "Choices cannot be empty");
-//        validateEmptyList(answers, "Answers cannot be empty");
 //        validateAnswersSize(choices, answers);
     }
 
@@ -32,16 +37,7 @@ public class QuizChoiceValidator {
         }
     }
 
-    public void validateAnswersSize(List<String> choices, List<String> answers) {
-        if (answers.size() > choices.size()) {
-            throw new IllegalArgumentException("Answers cannot be more than choices");
-        }
-    }
+    public void validateQuizAnswer(Quiz quiz) {
 
-    public void validateRightAnswers(int answerCount) {
-        if (answerCount == 0) {
-            throw new IllegalArgumentException("Answers cannot be empty");
-        }
     }
-
 }

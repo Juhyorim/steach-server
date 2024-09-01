@@ -29,9 +29,20 @@ public class QuizController {
     private final QuizService quizService;
 
     @Secured("ROLE_TEACHER")
+    @Operation(summary = "[강사] 퀴즈 하나 생성")
+    @PostMapping("/{lectureId}/one") //TODO url 수정
+    public ResponseEntity<QuizResponseDto> createQuiz(@AuthenticationPrincipal Teacher teacher,
+                                                      @PathVariable("lectureId") Integer lectureId,
+                                                      @RequestBody @Valid QuizRequestDto request) {
+        QuizResponseDto quizResponseDto = quizService.createOneQuiz(teacher, lectureId, request);
+
+        return ResponseEntity.ok(quizResponseDto);
+    }
+
+    @Secured("ROLE_TEACHER")
     @Operation(summary = "[강사] 퀴즈 여러 개 생성!", description = "성공시 200 반환, 실패시 500 INTERNAL_SERVER_ERROR 반환")
     @PostMapping("/{lectureId}")
-    public ResponseEntity<QuizListResponseDto> createQuiz(@AuthenticationPrincipal Teacher teacher, @PathVariable("lectureId")Integer lectureId, @RequestBody @Valid QuizListRequestDto request) {
+    public ResponseEntity<QuizListResponseDto> createQuizList(@AuthenticationPrincipal Teacher teacher, @PathVariable("lectureId")Integer lectureId, @RequestBody @Valid QuizListRequestDto request) {
         //TODO 수정이랑 너무 똑같다
         QuizListResponseDto dto = quizService.modifyManyQuiz(teacher, lectureId, request);
 
