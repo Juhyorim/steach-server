@@ -60,7 +60,7 @@ public class  QuizServiceImpl implements QuizService {
 
         List<Quiz> quizList = new ArrayList<>();
 
-        int errorIdx = 1;
+        int errorIdx = 1; //클라이언트 기준 error 인덱스
         for (QuizRequestDto quizRequestDto: request.quizList()) {
             try {
                 Quiz quiz = createQuiz(lecture, quizRequestDto);
@@ -142,11 +142,7 @@ public class  QuizServiceImpl implements QuizService {
     @Override
     @Transactional
     public QuizResponseDto modifyQuiz(Teacher teacher, Integer quizId, QuizRequestDto dto) {
-        //dto 검증로직
-        if (dto.getAnswers() == null && dto.getChoices() != null) {
-            throw new IllegalArgumentException("quiz choices에 수정사항이 있다면 answer는 null이어서는 안됩니다.");
-        }
-
+        quizChoiceValidator.validateQuizChoices(dto.getChoices(), dto.getAnswers());
         Quiz quiz = quizRepository.findByIdWithQuizChoice(quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("퀴즈를 찾을 수 없음"));
 
@@ -159,11 +155,9 @@ public class  QuizServiceImpl implements QuizService {
         //answer만 바뀌는 경우
         if (dto.getChoices() == null && dto.getAnswers() != null) {
             List<QuizChoice> quizChoices = quiz.getQuizChoices();
-            int answerIndex = dto.getAnswers() - 1; //TODO 이건 어떻게 처리하지? 실수 발생할 것 같다..
+            int answerIndex = dto.getAnswers() - 1;
 
-            if (answerIndex >= quiz.getQuizChoices().size() || answerIndex < 0) {
-                throw new IllegalArgumentException("정답관련 인덱스가 유효하지 않습니다.");
-            }
+            quizChoiceValidator.validateQuizChoices(quiz.getQuizChoiceString(), answerIndex);
 
             for (int i =0; i<quizChoices.size(); i++) {
                 if (answerIndex == i) {
@@ -178,17 +172,13 @@ public class  QuizServiceImpl implements QuizService {
         if (dto.getChoices() != null && dto.getAnswers() != null) {
             List<QuizChoice> quizChoices = quiz.getQuizChoices();
 
-            //TODO choice 도 몇 개 없는데, 그냥 삭제하는 게 나을까? 고민해보기..
             quiz.deleteAllQuizChoice();
             for (QuizChoice qc: quizChoices) {
                 quizChoiceService.deleteChoice(qc);
             }
 
-            int answerIndex = dto.getAnswers() - 1; //TODO 이건 어떻게 처리하지? 실수 발생할 것 같다..
-            //클라이언트 인덱스 유효성 검사
-            if (answerIndex >= dto.getChoices().size() || answerIndex < 0) {
-                throw new IllegalArgumentException("정답관련 인덱스가 유효하지 않습니다.");
-            }
+            int answerIndex = dto.getAnswers() - 1;
+            quizChoiceValidator.validateQuizChoices(quiz.getQuizChoiceString(), answerIndex);
 
             List<String> inputChoices = dto.getChoices();
             quizChoiceService.createQuizChoices(inputChoices, answerIndex, quiz);
@@ -199,6 +189,7 @@ public class  QuizServiceImpl implements QuizService {
         return mapToDto(quiz);
     }
 
+    //TODO 퀴즈를 푼 사람이 있는 경우 처리 생각(삭제를 안되게 할지..)
     @Override
     @Transactional
     public QuizListResponseDto modifyManyQuiz(Teacher teacher, Integer lectureId, QuizListRequestDto request) {
@@ -216,6 +207,7 @@ public class  QuizServiceImpl implements QuizService {
         return responseDto;
     }
 
+    //TODO statistics 갱신과 동시에 조회하는 경우 에러 발생가능 -> lock 고려해보기
     @Override
     @Transactional
     public QuizStatisticDto getStatistics(Integer quizId) { //통계데이터 TODO redis로 변경
