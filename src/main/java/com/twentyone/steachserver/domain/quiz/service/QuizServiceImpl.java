@@ -77,8 +77,9 @@ public class  QuizServiceImpl implements QuizService {
 
     @Transactional
     public Quiz createQuiz(Lecture lecture, QuizRequestDto quizRequestDto) {
+        int answerIdx = quizRequestDto.getAnswers()-1;
         //유효성 검사
-        quizChoiceValidator.validateQuizChoices(quizRequestDto.getChoices(), quizRequestDto.getAnswers());
+        quizChoiceValidator.validateQuizChoices(quizRequestDto.getChoices(), answerIdx);
 
         //퀴즈 생성
         Quiz quiz = Quiz.createQuiz(
@@ -91,7 +92,7 @@ public class  QuizServiceImpl implements QuizService {
 
         //QuizChoice 생성
         List<String> choices = quizRequestDto.getChoices();
-        List<QuizChoice> quizChoices = quizChoiceService.createQuizChoices(choices, quizRequestDto.getAnswers()-1, quiz);
+        List<QuizChoice> quizChoices = quizChoiceService.createQuizChoices(choices, answerIdx, quiz);
         quiz.addChoiceList(quizChoices);
 
         return quiz;

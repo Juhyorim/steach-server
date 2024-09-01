@@ -129,7 +129,8 @@ public class QuizIntegrationTest {
     }
 
     @Test
-    void 퀴즈생성() throws Exception {
+    @DisplayName("퀴즈 여러 개 생성")
+    void createManyQuiz() throws Exception {
         //given
         List<QuizRequestDto> quizRequestDtoList = new ArrayList<>();
         quizRequestDtoList.add(new QuizRequestDto(1, "마루는 귀엽다", List.of("O", "X"), 1, 1));
