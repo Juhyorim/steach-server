@@ -110,13 +110,22 @@ public class QuizIntegrationTest {
 
         //when
         QuizResponseDto oneQuiz = quizService.createOneQuiz(teacher, lecture.getId(), quizRequestDto);
+        Quiz quiz = quizRepository.findById(oneQuiz.getQuizId()).get();
 
         //then
+        //response와 비교
         assertEquals(quizRequestDto.getQuizNumber(), oneQuiz.getQuizNumber());
         assertEquals(quizRequestDto.getChoices(), oneQuiz.getChoices());
-        assertEquals(quizRequestDto.getAnswers(), oneQuiz.getAnswers());
+        assertEquals(quizRequestDto.getAnswers(), oneQuiz.getAnswers()); //request와 response는 차이가 나면 안됨
         assertEquals(quizRequestDto.getQuestion(), oneQuiz.getQuestion());
         assertEquals(quizRequestDto.getTime(), oneQuiz.getTime());
+
+        //데이터베이스 값과 비교
+        assertEquals(quiz.getQuizNumber(), oneQuiz.getQuizNumber());
+        assertEquals(quiz.getQuizChoiceString(), oneQuiz.getChoices());
+        assertEquals(quiz.getAnswer()+1, oneQuiz.getAnswers()); //데이터베이스에서의 answer와는 1 차이 나야함
+        assertEquals(quiz.getQuestion(), oneQuiz.getQuestion());
+        assertEquals(quiz.getTime(), oneQuiz.getTime());
     }
 
     @Test

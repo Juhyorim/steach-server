@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @Builder
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class QuizResponseDto {
     private Integer quizId;
     private Integer lectureId;
@@ -49,7 +49,7 @@ public class QuizResponseDto {
                 quiz.getTime(),
                 quiz.getQuestion(),
                 quiz.getQuizChoiceString(),
-                quiz.getAnswer()  //클라이언트에는 +1해서 주기
+                quiz.getAnswer()+1  //클라이언트에는 +1해서 주기 //TODO
         );
     }
 }

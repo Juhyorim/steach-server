@@ -42,7 +42,15 @@ public class  QuizServiceImpl implements QuizService {
         Lecture lecture = getLecture(lectureId);
         Quiz quiz = createQuiz(lecture, request);
 
-        return QuizResponseDto.fromDomain(quiz);
+        return new QuizResponseDto(
+                quiz.getId(),
+                quiz.getLecture().getId(),
+                quiz.getQuizNumber(),
+                quiz.getTime(),
+                quiz.getQuestion(),
+                quiz.getQuizChoiceString(),
+                quiz.getAnswer()+1  //클라이언트에는 +1해서 주기
+        );
     }
 
     @Override
@@ -83,7 +91,7 @@ public class  QuizServiceImpl implements QuizService {
 
         //QuizChoice 생성
         List<String> choices = quizRequestDto.getChoices();
-        List<QuizChoice> quizChoices = quizChoiceService.createQuizChoices(choices, quizRequestDto.getAnswers(), quiz);
+        List<QuizChoice> quizChoices = quizChoiceService.createQuizChoices(choices, quizRequestDto.getAnswers()-1, quiz);
         quiz.addChoiceList(quizChoices);
 
         return quiz;
