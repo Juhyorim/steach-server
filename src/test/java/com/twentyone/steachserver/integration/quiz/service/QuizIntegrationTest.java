@@ -152,15 +152,21 @@ public class QuizIntegrationTest {
             QuizResponseDto quizResponseDto = responseDtoList.get(i);
             QuizRequestDto quizRequestDto = quizRequestDtoList.get(i);
 
-            assertEquals(quizRequestDto.getQuizNumber(), quizRequestDto.getQuizNumber());
-            assertEquals(quizRequestDto.getQuestion(), quizRequestDto.getQuestion());
-            assertEquals(quizRequestDto.getChoices().size(), quizRequestDto.getChoices().size());
+            assertEquals(quizRequestDto.getQuizNumber(), quizResponseDto.getQuizNumber());
+            assertEquals(quizRequestDto.getQuestion(), quizResponseDto.getQuestion());
+            assertEquals(quizRequestDto.getChoices().size(), quizResponseDto.getChoices().size());
 
             for (int j=0; j<quizRequestDto.getChoices().size(); j++) {
                 assertEquals(quizRequestDto.getChoices().get(j), quizResponseDto.getChoices().get(j));
             }
 
-            assertEquals(quizRequestDto.getAnswers(), quizRequestDto.getAnswers());
+            assertEquals(quizRequestDto.getAnswers(), quizResponseDto.getAnswers());
+
+            //db값과 비교
+            Quiz quiz = quizRepository.findById(quizResponseDto.getQuizId())
+                    .orElseThrow(() -> new RuntimeException("에러"));
+
+            assertEquals(quiz.getAnswer()+1, quizResponseDto.getAnswers());
         }
     }
 
