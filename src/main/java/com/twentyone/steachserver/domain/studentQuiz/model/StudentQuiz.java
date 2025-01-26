@@ -2,6 +2,7 @@ package com.twentyone.steachserver.domain.studentQuiz.model;
 
 import com.twentyone.steachserver.domain.member.model.Student;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
+import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
 import com.twentyone.steachserver.domain.studentQuiz.dto.StudentQuizRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,7 +30,10 @@ public class StudentQuiz {
     private Integer score;
 
     @Column(name = "student_choice")
-    private String studentChoice;
+    private String studentChoice; //TODO int로 변경, 나중에 삭제
+
+    @Column(name = "quiz_choice_id")
+    private Integer quizChoiceId; //반정규화용
 
     protected StudentQuiz() {}
 
