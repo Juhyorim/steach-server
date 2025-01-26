@@ -1,5 +1,5 @@
 [submodule "steach-server-submodule"]
 	path = steach-server-submodule
-    url = git@github.com:TEAM-2NE1/steach-server-submodule.git
+    url = https://github.com/TEAM-2NE1/steach-server-submodule.git
 ; 	url = https://github.com/TEAM-2NE1/steach-server-submodule.git
 ; 젠킨스 빌드를 위한 https -> ssh
