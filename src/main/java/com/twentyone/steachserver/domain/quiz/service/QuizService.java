@@ -33,5 +33,8 @@ public interface QuizService {
     QuizListResponseDto modifyManyQuiz(Teacher teacher, Integer quizId, QuizListRequestDto dto);
 
     QuizStatisticDto getStatistics(Integer quizId);
+
+    @Transactional
+    QuizStatisticDto getStatisticsV2(Integer quizId);
 }
 

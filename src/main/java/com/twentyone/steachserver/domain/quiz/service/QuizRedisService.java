@@ -3,6 +3,8 @@ package com.twentyone.steachserver.domain.quiz.service;
 import com.twentyone.steachserver.domain.lecture.model.Lecture;
 import com.twentyone.steachserver.domain.member.model.Student;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
+import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
+import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,14 +25,6 @@ public class QuizRedisService {
     public void initialize(Lecture lecture, Quiz quiz) {
         // 현재 랭킹을 이전 랭킹으로 복사
         initializePrevRanking(lecture);
-
-        // 퀴즈 선택지 카운트 초기화
-        initializeQuizChoiceCount(quiz);
-    }
-
-    private void initializeQuizChoiceCount(Quiz quiz) {
-        String optionsKey = String.format(QUIZ_CHOICE_COUNT_FORMAT, quiz.getId());
-        redisTemplate.delete(optionsKey);
     }
 
     private void initializePrevRanking(Lecture lecture) {
@@ -61,5 +55,20 @@ public class QuizRedisService {
         // 합산된 점수로 업데이트
         newScore += score;
         redisTemplate.opsForZSet().add(key, userKey, newScore); //TODO 닉네임 중복관련 처리 - 현재는 닉네임과 PK를 묶음
+    }
+
+    public void updateQuizChoiceCount(Quiz quiz, QuizChoice quizChoice) {
+        //TODO TTL설정으로 quiz 선택지 개수 일정시간 후에 없어지도록 하기
+        String key = String.format(QUIZ_CHOICE_COUNT_FORMAT, quiz.getId());
+        String choiceSentenceKey = quizChoice.getId() + ":" + quizChoice.getChoiceSentence(); //TODO 구분자: 대체할 방안 찾기
+
+        redisTemplate.opsForHash().increment(key, choiceSentenceKey, 1);
+    }
+
+    // 퀴즈 선택지별 선택 수 조회
+    public Map<Object, Object> getQuizChoiceCounts(Integer quizId) {
+        String key = String.format(QUIZ_CHOICE_COUNT_FORMAT, quizId);
+
+        return redisTemplate.opsForHash().entries(key);
     }
 }

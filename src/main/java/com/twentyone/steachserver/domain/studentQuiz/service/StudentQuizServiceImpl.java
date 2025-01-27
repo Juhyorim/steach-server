@@ -2,6 +2,7 @@ package com.twentyone.steachserver.domain.studentQuiz.service;
 
 import com.twentyone.steachserver.domain.member.model.Student;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
+import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
 import com.twentyone.steachserver.domain.quiz.model.QuizStatistics;
 import com.twentyone.steachserver.domain.quiz.repository.QuizChoiceRepository;
 import com.twentyone.steachserver.domain.quiz.repository.QuizRepository;
@@ -53,21 +54,17 @@ public class StudentQuizServiceImpl implements StudentQuizService {
         Quiz quiz = getQuiz(quizId);
 
         validateStudentQuizIsUnique(student, quizId);
-        validateQuizChoice(requestDto.quizChoiceId());
+        QuizChoice quizChoice = quizChoiceRepository.findById(requestDto.quizChoiceId())
+                .orElseThrow(() -> new IllegalArgumentException("퀴즈 선택지 정보가 올바르지 않습니다."));
 
         StudentQuiz newStudentQuiz = StudentQuiz.createStudentQuiz(student, quiz, requestDto.score(),
                 requestDto.quizChoiceId());
         studentQuizzesRepository.save(newStudentQuiz);
 
         //통계생성
-        createStatisticsV2(student, requestDto.score(), quiz, newStudentQuiz);
+        createStatisticsV2(student, quiz, newStudentQuiz, quizChoice);
 
         return newStudentQuiz;
-    }
-
-    private void validateQuizChoice(Integer quizChoiceId) {
-        quizChoiceRepository.findById(quizChoiceId)
-                .orElseThrow(() -> new IllegalArgumentException("퀴즈 선택지 정보가 올바르지 않습니다."));
     }
 
     private void validateStudentQuizIsUnique(Student student, Integer quizId) {
@@ -102,11 +99,12 @@ public class StudentQuizServiceImpl implements StudentQuizService {
     }
 
     //Redis 버전
-    private void createStatisticsV2(Student student, Integer score, Quiz quiz,
-                                  StudentQuiz newStudentQuiz) {
+    private void createStatisticsV2(Student student, Quiz quiz,
+                                  StudentQuiz newStudentQuiz, QuizChoice quizChoice) {
         //통계생성 - 실패해도 계속 진행하도록 처리
         try {
-            quizRedisService.updateUserQuizScore(quiz.getLecture(), student, newStudentQuiz.getScore());
+            quizRedisService.updateUserQuizScore(quiz.getLecture(), student, newStudentQuiz.getScore()); //랭킹 점수 갱신
+            quizRedisService.updateQuizChoiceCount(quiz, quizChoice); //선택지 카운트 증가
         } catch (RuntimeException e) {
             //pass
         }

@@ -205,7 +205,7 @@ public class  QuizServiceImpl implements QuizService {
 
     @Override
     @Transactional
-    public QuizStatisticDto getStatistics(Integer quizId) { //통계데이터 TODO redis로 변경
+    public QuizStatisticDto getStatistics(Integer quizId) {
         /*
          * <나와야하는 결과물>
          * 1) 한 퀴즈에 대해 선택지 당 선택된 개수
@@ -262,5 +262,27 @@ public class  QuizServiceImpl implements QuizService {
         QuizStatisticDto quizStatisticDto = new QuizStatisticDto(statistics, new ArrayList<>(), current);
 
         return quizStatisticDto;
+    }
+
+    @Transactional
+    @Override
+    public QuizStatisticDto getStatisticsV2(Integer quizId) {
+        /*
+         * <나와야하는 결과물>
+         * 1) 한 퀴즈에 대해 선택지 당 선택된 개수
+         * 2) 한 강의에서 사람들의 current 퀴즈점수 + rank매기기
+         */
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("찾을 수 없는 퀴즈"));
+
+        //1) 한 퀴즈에 대해 선택지 당 선택된 개수
+        Map<Object, Object> quizChoiceCounts = quizRedisService.getQuizChoiceCounts(quiz.getId());
+
+        // 2) 한 강의에서 사람들의 current 퀴즈점수 + rank매기기
+//        quizRedisService.getQuizRank(quiz);
+
+//        QuizStatisticDto quizStatisticDto = new QuizStatisticDto(statistics, new ArrayList<>(), current);
+
+        return null;
     }
 }
