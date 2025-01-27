@@ -31,6 +31,8 @@ public class Quiz {
     
     private Integer time; //퀴즈 제한시간
 
+    private Boolean isFinished = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lecture_id", referencedColumnName = "id")
     private Lecture lecture;
@@ -105,5 +107,9 @@ public class Quiz {
 
     public void addChoiceList(List<QuizChoice> quizChoices) {
         this.quizChoices = quizChoices;
+    }
+
+    public void start() {
+        this.isFinished = true;
     }
 }
