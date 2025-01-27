@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class QuizRedisService {
     public static final String CURRENT_RANKING_FORMAT = "lecture:%d:current_ranking"; //%d = lectureId
     public static final String PREV_RANKING_FORMAT = "lecture:%d:prev_ranking"; //%d = lectureId
+    public static final String QUIZ_CHOICE_COUNT_FORMAT = "quiz:%d:options"; //%d = quizId
+
     private final StringRedisTemplate redisTemplate;
 
     public void initialize(Lecture lecture, Quiz quiz) {
@@ -23,6 +25,12 @@ public class QuizRedisService {
         initializePrevRanking(lecture);
 
         // 퀴즈 선택지 카운트 초기화
+        initializeQuizChoiceCount(quiz);
+    }
+
+    private void initializeQuizChoiceCount(Quiz quiz) {
+        String optionsKey = String.format(QUIZ_CHOICE_COUNT_FORMAT, quiz.getId());
+        redisTemplate.delete(optionsKey);
     }
 
     private void initializePrevRanking(Lecture lecture) {
