@@ -37,7 +37,7 @@ public class  QuizServiceImpl implements QuizService {
                 .orElseThrow(() -> new IllegalArgumentException("찾을 수 없는 퀴즈"));
 
         if (!quiz.getIsFinished()) {
-            quizRedisService.initialize(quiz.getLecture().getId(), quiz.getId());
+            quizRedisService.initialize(quiz.getLecture(), quiz);
             quiz.start();
         }
     }
