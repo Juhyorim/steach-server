@@ -16,9 +16,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Tag(name = "퀴즈")
@@ -38,7 +36,7 @@ public class QuizController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    @Operation(summary = "[강사?] 퀴즈 조회!", description = "성공시 200 반환, 실패시 204 NOT_FOUND 반환")
+    @Operation(summary = "[강사?] 퀴즈 조회! (deprecated)", description = "성공시 200 반환, 실패시 204 NOT_FOUND 반환")
     @GetMapping("/{quizId}")
     public ResponseEntity<QuizResponseDto> getQuizResponseDto(@PathVariable("quizId") Integer quizId) {
         return quizService.findById(quizId)

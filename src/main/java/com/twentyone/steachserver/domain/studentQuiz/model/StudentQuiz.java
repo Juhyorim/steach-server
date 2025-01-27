@@ -2,8 +2,6 @@ package com.twentyone.steachserver.domain.studentQuiz.model;
 
 import com.twentyone.steachserver.domain.member.model.Student;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
-import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
-import com.twentyone.steachserver.domain.studentQuiz.dto.StudentQuizRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -43,10 +41,18 @@ public class StudentQuiz {
         this.quiz = quiz;
     }
 
-    public static StudentQuiz createStudentQuiz(Student student, Quiz quiz, StudentQuizRequestDto requestDto) {
+    //TODO 삭제
+    public static StudentQuiz createStudentQuiz(Student student, Quiz quiz, Integer score, String studentChoice) {
         StudentQuiz studentQuiz = new StudentQuiz(student, quiz);
-        studentQuiz.score = requestDto.score() == null ? 0 : requestDto.score();
-        studentQuiz.studentChoice = requestDto.studentChoice();
+        studentQuiz.score = score == null ? 0 : score;
+        studentQuiz.studentChoice = studentChoice;
+        return studentQuiz;
+    }
+
+    public static StudentQuiz createStudentQuiz(Student student, Quiz quiz, Integer score, Integer quizChoiceId) {
+        StudentQuiz studentQuiz = new StudentQuiz(student, quiz);
+        studentQuiz.score = score == null ? 0 : score;
+        studentQuiz.quizChoiceId = quizChoiceId;
         return studentQuiz;
     }
 
