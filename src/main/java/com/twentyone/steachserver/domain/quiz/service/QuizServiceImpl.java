@@ -5,10 +5,6 @@ import com.twentyone.steachserver.domain.lecture.repository.LectureRepository;
 import com.twentyone.steachserver.domain.member.model.Teacher;
 import com.twentyone.steachserver.domain.quiz.dto.*;
 import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
-import com.twentyone.steachserver.domain.quiz.model.QuizStatistics;
-import com.twentyone.steachserver.domain.quiz.repository.QuizStatisticsRepository;
-import com.twentyone.steachserver.domain.quiz.validator.QuizChoiceValidator;
-import com.twentyone.steachserver.domain.quiz.validator.QuizValidator;
 import com.twentyone.steachserver.domain.lecture.model.Lecture;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import com.twentyone.steachserver.domain.quiz.repository.QuizRepository;
@@ -31,10 +27,20 @@ public class  QuizServiceImpl implements QuizService {
     private final QuizRepository quizRepository;
     private final LectureRepository lectureRepository;
     private final QuizChoiceService quizChoiceService;
-    private final QuizValidator quizValidator;
-    private final QuizChoiceValidator quizChoiceValidator;
     private final StudentQuizRepository studentQuizRepository;
-    private final QuizStatisticsRepository quizStatisticsRepository;
+    private final QuizRedisService quizRedisService;
+
+    @Transactional
+    @Override
+    public void startQuiz(Integer quizId, Teacher teacher) {
+        Quiz quiz = findById(quizId)
+                .orElseThrow(() -> new IllegalArgumentException("찾을 수 없는 퀴즈"));
+
+        if (!quiz.getIsFinished()) {
+            quizRedisService.initialize(quiz.getLecture().getId(), quiz.getId());
+            quiz.start();
+        }
+    }
 
     @Override
     @Transactional

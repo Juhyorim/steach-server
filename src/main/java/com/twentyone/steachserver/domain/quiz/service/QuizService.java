@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 public interface QuizService {
+    @Transactional
+    void startQuiz(Integer quizId, Teacher teacher);
+
     // Quiz methods
     QuizListResponseDto createQuizList(Integer lectureId, QuizListRequestDto request) throws RuntimeException;
 

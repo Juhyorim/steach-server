@@ -6,6 +6,7 @@ import com.twentyone.steachserver.domain.quiz.model.QuizStatistics;
 import com.twentyone.steachserver.domain.quiz.repository.QuizChoiceRepository;
 import com.twentyone.steachserver.domain.quiz.repository.QuizRepository;
 import com.twentyone.steachserver.domain.quiz.repository.QuizStatisticsRepository;
+import com.twentyone.steachserver.domain.quiz.service.QuizRedisService;
 import com.twentyone.steachserver.domain.studentQuiz.dto.StudentQuizRequestDto;
 import com.twentyone.steachserver.domain.studentQuiz.dto.StudentQuizRequestDtoV2;
 import com.twentyone.steachserver.domain.studentQuiz.model.StudentQuiz;
@@ -26,9 +27,10 @@ public class StudentQuizServiceImpl implements StudentQuizService {
     private final QuizRepository quizRepository;
     private final QuizStatisticsRepository quizStatisticsRepository;
     private final QuizChoiceRepository quizChoiceRepository;
+    private final QuizRedisService quizRedisService;
 
     @Secured("ROLE_STUDENT")
-    @Transactional
+    @Transactional //TODO 삭제
     public StudentQuiz createStudentQuiz(Student student, Integer quizId, StudentQuizRequestDto requestDto) {
         Quiz quiz = getQuiz(quizId);
 
@@ -58,7 +60,7 @@ public class StudentQuizServiceImpl implements StudentQuizService {
         studentQuizzesRepository.save(newStudentQuiz);
 
         //통계생성
-        createStatistics(student, requestDto.score(), quiz, newStudentQuiz);
+        createStatisticsV2(student, requestDto.score(), quiz, newStudentQuiz);
 
         return newStudentQuiz;
     }
@@ -94,6 +96,17 @@ public class StudentQuizServiceImpl implements StudentQuizService {
             quizStatistics.update(score);
 
             quizStatisticsRepository.save(quizStatistics);
+        } catch (RuntimeException e) {
+            //pass
+        }
+    }
+
+    //Redis 버전
+    private void createStatisticsV2(Student student, Integer score, Quiz quiz,
+                                  StudentQuiz newStudentQuiz) {
+        //통계생성 - 실패해도 계속 진행하도록 처리
+        try {
+            quizRedisService.updateUserQuizScore(quiz.getLecture(), student, newStudentQuiz.getScore());
         } catch (RuntimeException e) {
             //pass
         }
