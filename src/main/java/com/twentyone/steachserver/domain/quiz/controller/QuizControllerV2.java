@@ -1,5 +1,6 @@
 package com.twentyone.steachserver.domain.quiz.controller;
 
+import com.twentyone.steachserver.domain.member.model.Teacher;
 import com.twentyone.steachserver.domain.quiz.dto.QuizResponseDtoV2;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import com.twentyone.steachserver.domain.quiz.service.QuizService;
@@ -8,8 +9,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,5 +34,13 @@ public class QuizControllerV2 {
         }
 
         return ResponseEntity.ok().body(QuizResponseDtoV2.fromDomain(quiz));
+    }
+
+    @Operation(summary = "퀴즈 시작")
+    @PostMapping("/start/{quizId}")
+    public ResponseEntity startQuiz(@AuthenticationPrincipal Teacher teacher, @PathVariable("quizId") Integer quizId) {
+        quizService.startQuiz(quizId, teacher);
+
+        return ResponseEntity.ok().build();
     }
 }
