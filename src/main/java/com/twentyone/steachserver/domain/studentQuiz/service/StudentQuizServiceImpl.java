@@ -1,6 +1,7 @@
 package com.twentyone.steachserver.domain.studentQuiz.service;
 
 import com.twentyone.steachserver.domain.member.model.Student;
+import com.twentyone.steachserver.domain.quiz.dto.QuizStatisticDto;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
 import com.twentyone.steachserver.domain.quiz.model.QuizStatistics;
@@ -13,8 +14,9 @@ import com.twentyone.steachserver.domain.studentQuiz.dto.StudentQuizRequestDtoV2
 import com.twentyone.steachserver.domain.studentQuiz.model.StudentQuiz;
 import com.twentyone.steachserver.domain.studentQuiz.model.StudentQuizId;
 import com.twentyone.steachserver.domain.studentQuiz.repository.StudentQuizRepository;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +31,8 @@ public class StudentQuizServiceImpl implements StudentQuizService {
     private final QuizStatisticsRepository quizStatisticsRepository;
     private final QuizChoiceRepository quizChoiceRepository;
     private final QuizRedisService quizRedisService;
+    private final StringRedisTemplate redisTemplate;
 
-    @Secured("ROLE_STUDENT")
     @Transactional //TODO 삭제
     public StudentQuiz createStudentQuiz(Student student, Integer quizId, StudentQuizRequestDto requestDto) {
         Quiz quiz = getQuiz(quizId);
@@ -48,10 +50,15 @@ public class StudentQuizServiceImpl implements StudentQuizService {
     }
 
     @Override
-    @Secured("ROLE_STUDENT")
     @Transactional
     public StudentQuiz createStudentQuizV2(Student student, Integer quizId, StudentQuizRequestDtoV2 requestDto) {
         Quiz quiz = getQuiz(quizId);
+
+        LocalDateTime quizFinishTime = LocalDateTime.parse(
+                redisTemplate.opsForValue().get(new StringBuffer().append("quizFinishTime:").append(quizId).toString()));
+        if (LocalDateTime.now().isAfter(quizFinishTime)) {
+            throw new IllegalArgumentException("퀴즈를 풀 수 있는 시간이 지났습니다");
+        }
 
         validateStudentQuizIsUnique(student, quizId);
         QuizChoice quizChoice = quizChoiceRepository.findById(requestDto.quizChoiceId())

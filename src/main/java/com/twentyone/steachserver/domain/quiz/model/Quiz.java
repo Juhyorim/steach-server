@@ -4,6 +4,7 @@ import com.twentyone.steachserver.domain.studentQuiz.model.StudentQuiz;
 import com.twentyone.steachserver.domain.quiz.dto.QuizRequestDto;
 import com.twentyone.steachserver.domain.lecture.model.Lecture;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,6 +33,8 @@ public class Quiz {
     private Integer time; //퀴즈 제한시간
 
     private Boolean isFinished = false;
+
+    private LocalDateTime finishTime; //퀴즈가 끝난 시간
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lecture_id", referencedColumnName = "id")
@@ -111,5 +114,6 @@ public class Quiz {
 
     public void start() {
         this.isFinished = true;
+        this.finishTime = LocalDateTime.now().plusSeconds(time + 100); //퀴즈 끝나는 시간 추가 + 여유시간 추가
     }
 }

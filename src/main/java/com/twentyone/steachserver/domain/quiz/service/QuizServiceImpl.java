@@ -11,8 +11,10 @@ import com.twentyone.steachserver.domain.quiz.repository.QuizRepository;
 import com.twentyone.steachserver.domain.studentQuiz.model.StudentQuiz;
 import com.twentyone.steachserver.domain.studentQuiz.repository.StudentQuizRepository;
 import com.twentyone.steachserver.global.error.ResourceNotFoundException;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -265,6 +267,7 @@ public class  QuizServiceImpl implements QuizService {
     }
 
     @Transactional
+    @Async
     @Override
     public QuizStatisticDto getStatisticsV2(Integer quizId) {
         /*
@@ -274,6 +277,17 @@ public class  QuizServiceImpl implements QuizService {
          */
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("찾을 수 없는 퀴즈"));
+
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(quiz.getFinishTime())) {
+            long delayMillis = java.time.Duration.between(now, quiz.getFinishTime()).toMillis() + 100; //여유시간 추가
+            try {
+                Thread.sleep(delayMillis); //종료시간까지 대기
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("통계 계산 대기 중 인터럽트 발생", e);
+            }
+        }
 
         //1) 한 퀴즈에 대해 선택지 당 선택된 개수
         Map<Object, Object> quizChoiceCounts = quizRedisService.getQuizChoiceCounts(quiz.getId());

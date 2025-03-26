@@ -29,6 +29,11 @@ public class QuizRedisService {
     public void initialize(Lecture lecture, Quiz quiz) {
         // 현재 랭킹을 이전 랭킹으로 복사
         initializePrevRanking(lecture);
+
+        //퀴즈 끝나는 시간 Redis에 저장
+        String key = String.format("quizFinishTime:%d", quiz.getId()); //key: quizFinishTime:1
+        redisTemplate.opsForValue().set(key, String.valueOf(quiz.getFinishTime()));
+        redisTemplate.expire(key, 10, TimeUnit.MINUTES); //10분 TTL 설정
     }
 
     private void initializePrevRanking(Lecture lecture) {

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +29,7 @@ public class StudentQuizControllerV2 {
 
     @Operation(summary = "[학생] 학생이 퀴즈를 풀면 퀴즈에 관한 정보 저장!", description = "무조건 200을 반환")
     @PostMapping("/{quizId}")
+    @Secured("ROLE_STUDENT")
     public ResponseEntity<?> createStudentQuiz(@AuthenticationPrincipal Student student, @PathVariable("quizId") Integer quizId, @RequestBody StudentQuizRequestDtoV2 requestDto) throws Exception {
         StudentQuiz studentQuiz = studentQuizService.createStudentQuizV2(student, quizId, requestDto);
         return ResponseEntity
