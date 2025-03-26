@@ -54,8 +54,11 @@ public class StudentQuizServiceImpl implements StudentQuizService {
     public StudentQuiz createStudentQuizV2(Student student, Integer quizId, StudentQuizRequestDtoV2 requestDto) {
         Quiz quiz = getQuiz(quizId);
 
-        LocalDateTime quizFinishTime = LocalDateTime.parse(
-                redisTemplate.opsForValue().get(new StringBuffer().append("quizFinishTime:").append(quizId).toString()));
+        String value = redisTemplate.opsForValue()
+                .get(String.format("quizFinishTime:%d", quizId));
+
+        LocalDateTime quizFinishTime = LocalDateTime.parse(value);
+
         if (LocalDateTime.now().isAfter(quizFinishTime)) {
             throw new IllegalArgumentException("퀴즈를 풀 수 있는 시간이 지났습니다");
         }
@@ -87,6 +90,7 @@ public class StudentQuizServiceImpl implements StudentQuizService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 퀴즈입니다."));
     }
 
+    //@TODO 삭제
     private void createStatistics(Student student, Integer score, Quiz quiz,
                                   StudentQuiz newStudentQuiz) {
         //통계생성 - 실패해도 계속 진행하도록 처리

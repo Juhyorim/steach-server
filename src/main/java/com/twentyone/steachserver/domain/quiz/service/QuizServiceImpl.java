@@ -4,6 +4,7 @@ import com.twentyone.steachserver.domain.auth.error.ForbiddenException;
 import com.twentyone.steachserver.domain.lecture.repository.LectureRepository;
 import com.twentyone.steachserver.domain.member.model.Teacher;
 import com.twentyone.steachserver.domain.quiz.dto.*;
+import com.twentyone.steachserver.domain.quiz.dto.QuizStatisticDtoV2.QuizOptionsDto;
 import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
 import com.twentyone.steachserver.domain.lecture.model.Lecture;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
@@ -39,8 +40,8 @@ public class  QuizServiceImpl implements QuizService {
                 .orElseThrow(() -> new IllegalArgumentException("찾을 수 없는 퀴즈"));
 
         if (!quiz.getIsFinished()) {
-            quizRedisService.initialize(quiz.getLecture(), quiz);
             quiz.start();
+            quizRedisService.initialize(quiz.getLecture(), quiz);
         }
     }
 
@@ -268,7 +269,7 @@ public class  QuizServiceImpl implements QuizService {
     @Transactional
     @Async
     @Override
-    public QuizStatisticDto getStatisticsV2(Integer quizId) {
+    public QuizStatisticDtoV2 getStatisticsV2(Integer quizId) {
         /*
          * <나와야하는 결과물>
          * 1) 한 퀴즈에 대해 선택지 당 선택된 개수
@@ -279,7 +280,7 @@ public class  QuizServiceImpl implements QuizService {
 
         LocalDateTime now = LocalDateTime.now();
         if (now.isBefore(quiz.getFinishTime())) {
-            long delayMillis = java.time.Duration.between(now, quiz.getFinishTime()).toMillis() + 100; //여유시간 추가
+            long delayMillis = java.time.Duration.between(now, quiz.getFinishTime()).toMillis()/100 + 1; //여유시간 추가
             try {
                 Thread.sleep(delayMillis); //종료시간까지 대기
             } catch (InterruptedException e) {
@@ -289,15 +290,7 @@ public class  QuizServiceImpl implements QuizService {
         }
 
         //1) 한 퀴즈에 대해 선택지 당 선택된 개수
-        Map<Object, Object> quizChoiceCounts = quizRedisService.getQuizChoiceCounts(quiz.getId());
-        TreeMap<Integer, Integer > treeMap = new TreeMap<>();
-        for (Object quizKey: quizChoiceCounts.keySet()) {
-            treeMap.put(Integer.parseInt((String) quizKey), Integer.parseInt((String) quizChoiceCounts.get(quizKey)));
-        }
-        List<Integer> statistics = new ArrayList<>();
-        for (Integer treeKey: treeMap.keySet()) {
-            statistics.add(treeMap.get(treeKey));
-        }
+        List<QuizOptionsDto> statistics = quizRedisService.getQuizChoiceCounts(quiz.getId());
 
         //2) 현재 랭킹 받아오기
         Map<String, Double> currentRanking = quizRedisService.getCurrentRanking(quiz.getLecture().getId());
@@ -308,7 +301,7 @@ public class  QuizServiceImpl implements QuizService {
             current.add(new QuizStudentScoreDto(rank++, currentRanking.get(rankingKey).intValue(), rankingKey));
         }
 
-        QuizStatisticDto quizStatisticDto = new QuizStatisticDto(statistics, new ArrayList<>(), current);
+        QuizStatisticDtoV2 quizStatisticDto = new QuizStatisticDtoV2(statistics, new ArrayList<>(), current);
 
         return quizStatisticDto;
     }

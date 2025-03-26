@@ -38,6 +38,6 @@ public interface QuizService {
     QuizStatisticDto getStatistics(Integer quizId);
 
     @Transactional
-    QuizStatisticDto getStatisticsV2(Integer quizId);
+    QuizStatisticDtoV2 getStatisticsV2(Integer quizId);
 }
 

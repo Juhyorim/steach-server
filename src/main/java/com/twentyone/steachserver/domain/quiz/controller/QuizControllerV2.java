@@ -1,8 +1,10 @@
 package com.twentyone.steachserver.domain.quiz.controller;
 
+import com.twentyone.steachserver.domain.auth.model.LoginCredential;
 import com.twentyone.steachserver.domain.member.model.Teacher;
 import com.twentyone.steachserver.domain.quiz.dto.QuizRequestDtoV2;
 import com.twentyone.steachserver.domain.quiz.dto.QuizResponseDtoV2;
+import com.twentyone.steachserver.domain.quiz.dto.QuizStatisticDtoV2;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import com.twentyone.steachserver.domain.quiz.service.QuizService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,5 +58,12 @@ public class QuizControllerV2 {
         quizService.startQuiz(quizId, teacher);
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{quiz_id}/statistic")
+    public ResponseEntity<QuizStatisticDtoV2> getStatistics(@PathVariable("quiz_id")Integer quizId, @AuthenticationPrincipal LoginCredential loginCredential) {
+        QuizStatisticDtoV2 dto = quizService.getStatisticsV2(quizId);
+
+        return ResponseEntity.ok(dto);
     }
 }

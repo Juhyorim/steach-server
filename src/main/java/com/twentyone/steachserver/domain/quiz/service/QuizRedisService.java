@@ -2,12 +2,19 @@ package com.twentyone.steachserver.domain.quiz.service;
 
 import com.twentyone.steachserver.domain.lecture.model.Lecture;
 import com.twentyone.steachserver.domain.member.model.Student;
+import com.twentyone.steachserver.domain.quiz.dto.QuizStatisticDtoV2.QuizOptionsDto;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisOperations;
@@ -30,10 +37,16 @@ public class QuizRedisService {
         // 현재 랭킹을 이전 랭킹으로 복사
         initializePrevRanking(lecture);
 
+        //퀴즈 options 0으로 초기화
+        final String optionKey = String.format(QUIZ_CHOICE_COUNT_FORMAT, quiz.getId()); //"quiz:%d:options"
+        for (QuizChoice quizChoice: quiz.getQuizChoices()) {
+            redisTemplate.opsForHash().put(optionKey, quizChoice.getId() + ":::" + quizChoice.getChoiceSentence(), "0");
+        }
+
         //퀴즈 끝나는 시간 Redis에 저장
-        String key = String.format("quizFinishTime:%d", quiz.getId()); //key: quizFinishTime:1
-        redisTemplate.opsForValue().set(key, String.valueOf(quiz.getFinishTime()));
-        redisTemplate.expire(key, 10, TimeUnit.MINUTES); //10분 TTL 설정
+        String finishKey = String.format("quizFinishTime:%d", quiz.getId()); //key: quizFinishTime:1
+        redisTemplate.opsForValue().set(finishKey, String.valueOf(quiz.getFinishTime()));
+        redisTemplate.expire(finishKey, 10, TimeUnit.MINUTES); //10분 TTL 설정
     }
 
     private void initializePrevRanking(Lecture lecture) {
@@ -51,7 +64,7 @@ public class QuizRedisService {
 
     public void updateUserQuizScore(Lecture lecture, Student student, Integer score) {
         // ZADD lecture:{lectureId}:current_ranking
-        String userKey = student.getName() + student.getId();
+        String userKey = new StringBuilder().append(student.getName()).append(":").append(student.getId()).toString();
         String key = String.format(CURRENT_RANKING_FORMAT, lecture.getId());
 
         // 현재 점수 조회
@@ -68,8 +81,8 @@ public class QuizRedisService {
 
     //@TODO 실패했을 때 메시지큐 등을 사용할 방법이 없는지 확인
     public void updateQuizChoiceCount(Quiz quiz, QuizChoice quizChoice) {
-        final String key = String.format(QUIZ_CHOICE_COUNT_FORMAT, quiz.getId());
-        final String choiceKey = String.valueOf(quizChoice.getId());
+        final String key = String.format(QUIZ_CHOICE_COUNT_FORMAT, quiz.getId()); //"quiz:%d:options"
+        final String choiceKey = quizChoice.getId() + ":::" + quizChoice.getChoiceSentence();
 
         try {
             // Redis 트랜잭션 사용
@@ -79,7 +92,7 @@ public class QuizRedisService {
                     try {
                         operations.multi(); // tx 시작
 
-                        operations.opsForHash().increment(key, choiceKey, 1); // 카운트 증가
+                        operations.opsForHash().increment(key, choiceKey, 1); // 카운트 증가, choiceKey는 순서 보장
                         operations.expire(key, 1, TimeUnit.HOURS); // TTL 설정: 1시간
 
                         return operations.exec(); // tx 커밋
@@ -95,11 +108,33 @@ public class QuizRedisService {
         }
     }
 
-    // 퀴즈 선택지별 선택 수 조회
-    public Map<Object, Object> getQuizChoiceCounts(Integer quizId) {
-        String key = String.format(QUIZ_CHOICE_COUNT_FORMAT, quizId);
+    @Getter
+    @AllArgsConstructor
+    static class QuizTempOptions {
+        private Integer quizId;
+        private String sentence;
+        private Integer count;
+    }
 
-        return redisTemplate.opsForHash().entries(key);
+    // 퀴즈 선택지별 선택 수 조회 - quiz:3:options    45:::문제명    5
+    public List<QuizOptionsDto> getQuizChoiceCounts(Integer quizId) {
+        String optionKey = String.format(QUIZ_CHOICE_COUNT_FORMAT, quizId);
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(optionKey); //순서가 보장되지 않음 -> 정렬 필요
+
+        //정렬
+        List<QuizTempOptions> list = new ArrayList<>();
+        for (Object key: entries.keySet()) {
+            String[] option = ((String)key).split(":::"); //choiceId:::choiceSentence
+            list.add(new QuizTempOptions(Integer.valueOf(option[0]), option[1], Integer.valueOf(entries.get(key).toString())));
+        }
+        Collections.sort(list, Comparator.comparingInt(o -> o.getQuizId())); //퀴즈아이디 오름차순 정렬
+
+        List<QuizOptionsDto> dtoList = new ArrayList<>();
+        for (QuizTempOptions value: list) {
+            dtoList.add(new QuizOptionsDto(value.getQuizId(), value.getSentence(), value.getCount()));
+        }
+
+        return dtoList;
     }
 
     public Map<String, Double> getCurrentRanking(Integer lectureId) {
