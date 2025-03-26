@@ -3,12 +3,12 @@ package com.twentyone.steachserver.domain.quiz.service;
 import com.twentyone.steachserver.domain.lecture.model.Lecture;
 import com.twentyone.steachserver.domain.member.model.Student;
 import com.twentyone.steachserver.domain.quiz.dto.QuizStatisticDtoV2.QuizOptionsDto;
+import com.twentyone.steachserver.domain.quiz.dto.QuizStudentScoreDto;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -137,20 +137,22 @@ public class QuizRedisService {
         return dtoList;
     }
 
-    public Map<String, Double> getCurrentRanking(Integer lectureId) {
+    public List<QuizStudentScoreDto> getCurrentRanking(Integer lectureId) {
         String key = String.format(CURRENT_RANKING_FORMAT, lectureId);
 
         // 상위 5개 항목 조회
         Set<TypedTuple<String>> rankingSet = redisTemplate.opsForZSet()
                 .reverseRangeWithScores(key, 0, 4);
 
-        Map<String, Double> rankingMap = new HashMap<>();
+        List<QuizStudentScoreDto> current = new ArrayList<>();
+
         if (rankingSet != null) {
+            int rankCount = 1;
             for (TypedTuple<String> tuple : rankingSet) {
-                rankingMap.put(tuple.getValue(), tuple.getScore());
+                current.add(new QuizStudentScoreDto(rankCount++, tuple.getScore().intValue(), tuple.getValue().split(":")[0]));
             }
         }
 
-        return rankingMap;
+        return current;
     }
 }

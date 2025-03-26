@@ -293,13 +293,7 @@ public class  QuizServiceImpl implements QuizService {
         List<QuizOptionsDto> statistics = quizRedisService.getQuizChoiceCounts(quiz.getId());
 
         //2) 현재 랭킹 받아오기
-        Map<String, Double> currentRanking = quizRedisService.getCurrentRanking(quiz.getLecture().getId());
-        List<QuizStudentScoreDto> current = new ArrayList<>();
-
-        int rank = 1;
-        for (String rankingKey: currentRanking.keySet()) {
-            current.add(new QuizStudentScoreDto(rank++, currentRanking.get(rankingKey).intValue(), rankingKey));
-        }
+        List<QuizStudentScoreDto> current = quizRedisService.getCurrentRanking(quiz.getLecture().getId());
 
         QuizStatisticDtoV2 quizStatisticDto = new QuizStatisticDtoV2(statistics, new ArrayList<>(), current);
 
