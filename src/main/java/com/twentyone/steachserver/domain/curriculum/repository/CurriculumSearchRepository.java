@@ -5,9 +5,7 @@ import static com.twentyone.steachserver.domain.curriculum.model.QCurriculumDeta
 import static com.twentyone.steachserver.domain.member.model.QTeacher.teacher;
 import static io.jsonwebtoken.lang.Strings.hasText;
 
-import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -62,9 +60,7 @@ public class CurriculumSearchRepository {
     }
 
     public List<Curriculum> search(CurriculaSearchCondition condition) {
-        // 카운트 쿼리 (페이지네이션 없이)
-//        select s from curriculum s join curriculum_details d where d.title like :search
-//        System.out.println("search");
+        // 카운트 쿼리: select s from curriculum s join curriculum_details d where d.title like :search
         JPAQuery<Curriculum> countQuery = queryFactory
                 .select(curriculum)
                 .from(curriculum)

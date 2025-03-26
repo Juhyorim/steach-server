@@ -61,7 +61,7 @@ public class StudentQuizServiceImpl implements StudentQuizService {
                 requestDto.quizChoiceId());
         studentQuizzesRepository.save(newStudentQuiz);
 
-        //통계생성
+        //통계생성: Redis 사용, MySQL 로직 완료 후 마지막에 배치
         createStatisticsV2(student, quiz, newStudentQuiz, quizChoice);
 
         return newStudentQuiz;
