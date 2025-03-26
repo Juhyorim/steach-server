@@ -9,10 +9,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service //@Transactional 사용하지 않고 template을 사용
 public class QuizRedisService {
@@ -57,18 +61,32 @@ public class QuizRedisService {
         redisTemplate.opsForZSet().add(key, userKey, newScore); //TODO 닉네임 중복관련 처리 - 현재는 닉네임과 PK를 묶음
     }
 
+    //@TODO 실패했을 때 메시지큐 등을 사용할 방법이 없는지 확인
     public void updateQuizChoiceCount(Quiz quiz, QuizChoice quizChoice) {
-        //@TODO 실패했을 때 메시지큐 등을 사용할 방법이 없는지 확인
+        final String key = String.format(QUIZ_CHOICE_COUNT_FORMAT, quiz.getId());
+        final String choiceKey = String.valueOf(quizChoice.getId());
+
         try {
-            String key = String.format(QUIZ_CHOICE_COUNT_FORMAT, quiz.getId());
-            String choiceKey = "" + quizChoice.getId();
+            // Redis 트랜잭션 사용
+            redisTemplate.execute(new SessionCallback<>() {
+                @Override
+                public Object execute(RedisOperations operations) {
+                    try {
+                        operations.multi(); // tx 시작
 
-            redisTemplate.opsForHash().increment(key, choiceKey, 1);
+                        operations.opsForHash().increment(key, choiceKey, 1); // 카운트 증가
+                        operations.expire(key, 1, TimeUnit.HOURS); // TTL 설정: 1시간
 
-            // 전체 키에 TTL 설정 - 1시간으로
-            redisTemplate.expire(key, 1, TimeUnit.HOURS);
+                        return operations.exec(); // tx 커밋
+                    } catch (Exception e) {
+                        operations.discard(); // tx 롤백: 큐 버리기
+                        throw e;
+                    }
+                }
+            });
         } catch (RuntimeException e) {
-            //pass: MySQL 로직에는 영향이 없도록 처리
+            // MySQL 로직에는 영향이 없도록 예외 처리
+            log.info("Redis 트랜잭션 실패(QuizRedisService: updateQuizChoiceCount): " + e.getMessage());
         }
     }
 
