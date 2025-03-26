@@ -85,7 +85,7 @@ public class QuizController {
 
     @GetMapping("/{quiz_id}/statistic")
     public ResponseEntity<QuizStatisticDto> getStatistics(@PathVariable("quiz_id")Integer quizId, @AuthenticationPrincipal LoginCredential loginCredential) {
-        QuizStatisticDto dto = quizService.getStatistics(quizId);
+        QuizStatisticDto dto = quizService.getStatisticsV2(quizId);
 
         return ResponseEntity.ok(dto);
     }

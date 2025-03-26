@@ -277,12 +277,26 @@ public class  QuizServiceImpl implements QuizService {
 
         //1) 한 퀴즈에 대해 선택지 당 선택된 개수
         Map<Object, Object> quizChoiceCounts = quizRedisService.getQuizChoiceCounts(quiz.getId());
+        TreeMap<Integer, Integer > treeMap = new TreeMap<>();
+        for (Object quizKey: quizChoiceCounts.keySet()) {
+            treeMap.put(Integer.parseInt((String) quizKey), Integer.parseInt((String) quizChoiceCounts.get(quizKey)));
+        }
+        List<Integer> statistics = new ArrayList<>();
+        for (Integer treeKey: treeMap.keySet()) {
+            statistics.add(treeMap.get(treeKey));
+        }
 
-        // 2) 한 강의에서 사람들의 current 퀴즈점수 + rank매기기
-//        quizRedisService.getQuizRank(quiz);
+        //2) 현재 랭킹 받아오기
+        Map<String, Double> currentRanking = quizRedisService.getCurrentRanking(quiz.getLecture().getId());
+        List<QuizStudentScoreDto> current = new ArrayList<>();
 
-//        QuizStatisticDto quizStatisticDto = new QuizStatisticDto(statistics, new ArrayList<>(), current);
+        int rank = 1;
+        for (String rankingKey: currentRanking.keySet()) {
+            current.add(new QuizStudentScoreDto(rank++, currentRanking.get(rankingKey).intValue(), rankingKey));
+        }
 
-        return null;
+        QuizStatisticDto quizStatisticDto = new QuizStatisticDto(statistics, new ArrayList<>(), current);
+
+        return quizStatisticDto;
     }
 }

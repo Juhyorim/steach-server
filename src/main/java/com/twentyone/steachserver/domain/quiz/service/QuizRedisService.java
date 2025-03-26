@@ -71,4 +71,21 @@ public class QuizRedisService {
 
         return redisTemplate.opsForHash().entries(key);
     }
+
+    public Map<String, Double> getCurrentRanking(Integer lectureId) {
+        String key = String.format(CURRENT_RANKING_FORMAT, lectureId);
+
+        // 상위 5개 항목 조회
+        Set<TypedTuple<String>> rankingSet = redisTemplate.opsForZSet()
+                .reverseRangeWithScores(key, 0, 4);
+
+        Map<String, Double> rankingMap = new HashMap<>();
+        if (rankingSet != null) {
+            for (TypedTuple<String> tuple : rankingSet) {
+                rankingMap.put(tuple.getValue(), tuple.getScore());
+            }
+        }
+
+        return rankingMap;
+    }
 }
