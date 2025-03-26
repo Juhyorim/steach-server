@@ -45,29 +45,7 @@ public class  QuizServiceImpl implements QuizService {
     }
 
     @Override
-    @Transactional
-    public QuizListResponseDto createQuizList(Integer lectureId, QuizListRequestDto request) throws RuntimeException {
-        Lecture lecture = getLecture(lectureId);
-
-        List<Quiz> quizList = new ArrayList<>();
-
-        int errorIdx = 1;
-        for (QuizRequestDto quizRequestDto: request.quizList()) {
-            try {
-                Quiz quiz = createQuiz(lecture, quizRequestDto);
-                quizList.add(quiz);
-            } catch (RuntimeException e) {
-                throw new IllegalArgumentException(errorIdx+"번째 퀴즈에 오류발생: " + e.getMessage());
-            }
-
-            errorIdx++;
-        }
-
-        return QuizListResponseDto.fromDomainList(quizList);
-    }
-
-    @Override
-    @Transactional
+    @Transactional //@TODO 사용 x
     public Quiz createQuiz(Lecture lecture, QuizRequestDto quizRequestDto) {
         //퀴즈 생성
         Quiz quiz = Quiz.createQuiz(quizRequestDto, lecture);
@@ -82,6 +60,27 @@ public class  QuizServiceImpl implements QuizService {
 
         // Create and save QuizChoice entities
         List<QuizChoice> quizChoices = quizChoiceService.createQuizChoices(choices, quizRequestDto.getAnswers(), quiz);
+        quiz.addChoiceList(quizChoices);
+
+        return quiz;
+    }
+
+    @Transactional
+    @Override
+    public Quiz createQuizV2(Teacher teacher, Integer lectureId, QuizRequestDtoV2 quizRequestDto) {
+        Lecture lecture = lectureRepository.findById(lectureId)
+                .orElseThrow(() -> new ResourceNotFoundException("해당하는 강의를 찾을 수 없음"));
+
+        //권한 확인
+        if (!lecture.getCurriculum().getTeacher().getId().equals(teacher.getId())) {
+            throw new ForbiddenException("권한이 없는 사용자입니다");
+        }
+
+        //퀴즈 생성
+        Quiz quiz = Quiz.createQuiz(quizRequestDto, lecture);
+        quiz = quizRepository.save(quiz);
+
+        List<QuizChoice> quizChoices = quizChoiceService.createQuizChoices(quizRequestDto.getQuizChoiceList(), quiz);
         quiz.addChoiceList(quizChoices);
 
         return quiz;
@@ -312,5 +311,27 @@ public class  QuizServiceImpl implements QuizService {
         QuizStatisticDto quizStatisticDto = new QuizStatisticDto(statistics, new ArrayList<>(), current);
 
         return quizStatisticDto;
+    }
+
+    @Override
+    @Transactional //@TODO 사용 x
+    public QuizListResponseDto createQuizList(Integer lectureId, QuizListRequestDto request) throws RuntimeException {
+        Lecture lecture = getLecture(lectureId);
+
+        List<Quiz> quizList = new ArrayList<>();
+
+        int errorIdx = 1;
+        for (QuizRequestDto quizRequestDto: request.quizList()) {
+            try {
+                Quiz quiz = createQuiz(lecture, quizRequestDto);
+                quizList.add(quiz);
+            } catch (RuntimeException e) {
+                throw new IllegalArgumentException(errorIdx+"번째 퀴즈에 오류발생: " + e.getMessage());
+            }
+
+            errorIdx++;
+        }
+
+        return QuizListResponseDto.fromDomainList(quizList);
     }
 }

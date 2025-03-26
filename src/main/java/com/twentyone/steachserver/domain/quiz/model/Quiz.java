@@ -1,5 +1,6 @@
 package com.twentyone.steachserver.domain.quiz.model;
 
+import com.twentyone.steachserver.domain.quiz.dto.QuizRequestDtoV2;
 import com.twentyone.steachserver.domain.studentQuiz.model.StudentQuiz;
 import com.twentyone.steachserver.domain.quiz.dto.QuizRequestDto;
 import com.twentyone.steachserver.domain.lecture.model.Lecture;
@@ -47,6 +48,17 @@ public class Quiz {
     private List<QuizChoice> quizChoices = new ArrayList<>();
 
     public static Quiz createQuiz(QuizRequestDto request, Lecture lecture) {
+        Quiz quiz = new Quiz();
+        quiz.setLecture(lecture);
+        quiz.setQuestion(request.getQuestion());
+        quiz.setQuizNumber((request.getQuizNumber() == null || request.getQuizNumber()== 0)? lecture.getQuizzes().size() + 1 : request.getQuizNumber());
+        quiz.setTime(request.getTime());
+
+        lecture.addQuiz(quiz);
+        return quiz;
+    }
+
+    public static Quiz createQuiz(QuizRequestDtoV2 request, Lecture lecture) {
         Quiz quiz = new Quiz();
         quiz.setLecture(lecture);
         quiz.setQuestion(request.getQuestion());

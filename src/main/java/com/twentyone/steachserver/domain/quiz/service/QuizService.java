@@ -20,6 +20,9 @@ public interface QuizService {
     @Transactional
     Quiz createQuiz(Lecture lecture, QuizRequestDto quizRequestDto);
 
+    @Transactional
+    Quiz createQuizV2(Teacher teacher, Integer lectureId, QuizRequestDtoV2 quizRequestDto);
+
     Optional<Quiz> findById(Integer quizId);
 
     QuizResponseDto mapToDto(Quiz quiz);

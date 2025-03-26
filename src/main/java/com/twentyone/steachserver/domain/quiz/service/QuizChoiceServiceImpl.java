@@ -1,5 +1,6 @@
 package com.twentyone.steachserver.domain.quiz.service;
 
+import com.twentyone.steachserver.domain.quiz.dto.QuizChoiceRequest;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
 import com.twentyone.steachserver.domain.quiz.repository.QuizChoiceRepository;
@@ -36,6 +37,18 @@ public class QuizChoiceServiceImpl implements QuizChoiceService{
         }
 
         return quizChoiceList;
+    }
+
+    @Override
+    public List<QuizChoice> createQuizChoices(List<QuizChoiceRequest> quizChoiceList, Quiz quiz) {
+        List<QuizChoice> quizChoices = new ArrayList<>();
+
+        for (QuizChoiceRequest quizChoiceDto: quizChoiceList) {
+            quizChoices.add(QuizChoice.createQuizChoice(quizChoiceDto.sentence(), quiz, quizChoiceDto.isAnswer()));
+        }
+
+        quizChoiceRepository.saveAll(quizChoices);
+        return quizChoices;
     }
 
     public String getAnswers(Quiz quiz) {
