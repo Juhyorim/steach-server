@@ -4,17 +4,17 @@ import com.twentyone.steachserver.domain.lecture.model.Lecture;
 import com.twentyone.steachserver.domain.member.model.Student;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-@Transactional
-@Service
+@Service //@Transactional 사용하지 않고 template을 사용
 public class QuizRedisService {
     public static final String CURRENT_RANKING_FORMAT = "lecture:%d:current_ranking"; //%d = lectureId
     public static final String PREV_RANKING_FORMAT = "lecture:%d:prev_ranking"; //%d = lectureId
@@ -58,11 +58,18 @@ public class QuizRedisService {
     }
 
     public void updateQuizChoiceCount(Quiz quiz, QuizChoice quizChoice) {
-        //TODO TTL설정으로 quiz 선택지 개수 일정시간 후에 없어지도록 하기
-        String key = String.format(QUIZ_CHOICE_COUNT_FORMAT, quiz.getId());
-        String choiceSentenceKey = quizChoice.getId() + ":" + quizChoice.getChoiceSentence(); //TODO 구분자: 대체할 방안 찾기
+        //@TODO 실패했을 때 메시지큐 등을 사용할 방법이 없는지 확인
+        try {
+            String key = String.format(QUIZ_CHOICE_COUNT_FORMAT, quiz.getId());
+            String choiceKey = "" + quizChoice.getId();
 
-        redisTemplate.opsForHash().increment(key, choiceSentenceKey, 1);
+            redisTemplate.opsForHash().increment(key, choiceKey, 1);
+
+            // 전체 키에 TTL 설정 - 1시간으로
+            redisTemplate.expire(key, 1, TimeUnit.HOURS);
+        } catch (RuntimeException e) {
+            //pass: MySQL 로직에는 영향이 없도록 처리
+        }
     }
 
     // 퀴즈 선택지별 선택 수 조회
