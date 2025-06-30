@@ -2,6 +2,7 @@ package com.twentyone.steachserver.config;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.ReadPreference;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +24,7 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     @Value("${spring.data.mongodb.database}")
     private String databaseName;
 
-    @Bean
+    @Bean(name = "mongoTx")
     public MongoTransactionManager transactionManager(MongoDatabaseFactory dbFactory) {
         return new MongoTransactionManager(dbFactory);
     }
@@ -38,6 +39,8 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
         ConnectionString connectionString = new ConnectionString(this.connectionString);
         MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
+//                .writeConcern(WriteConcern.ACKNOWLEDGED) //write concern 기본 설정 옵션
+                .readPreference(ReadPreference.primary()) // readPreference Replica 시 많이 설정
                 .build();
 
         return MongoClients.create(mongoClientSettings);

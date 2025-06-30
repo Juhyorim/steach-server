@@ -90,6 +90,7 @@ public class QuizRedisService {
                 @Override
                 public Object execute(RedisOperations operations) {
                     try {
+                        operations.watch(key);
                         operations.multi(); // tx 시작
 
                         operations.opsForHash().increment(key, choiceKey, 1); // 카운트 증가, choiceKey는 순서 보장

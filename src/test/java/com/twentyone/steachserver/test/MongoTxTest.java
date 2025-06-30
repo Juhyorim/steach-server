@@ -35,7 +35,7 @@ public class MongoTxTest extends IntegrationTest {
     }
 
     @Test
-    void 트랜잭션_실패_테스트() throws Exception {
+    void 트랜잭션_롤백안됨_테스트() throws Exception {
         //given
         TxTestEntity original = new TxTestEntity("originalName", "originalEmail");
         TxTestEntity save = txTestRepository.save(original);
@@ -44,6 +44,25 @@ public class MongoTxTest extends IntegrationTest {
         //then
         assertThrows(IllegalArgumentException.class, () -> {
             txTestService.rollbackTest(save.getId(), "changeName");
+        });
+
+        TxTestEntity nextEntity = txTestRepository.findById(original.getId()).get();
+
+        //변경되었음을 체크 - 롤백이 안 되었는지 체크
+        assertEquals(original.getId(), nextEntity.getId());
+        assertEquals("changeName", nextEntity.getName());
+    }
+
+    @Test
+    void 트랜잭션_롤백_테스트_MongoTx() throws Exception {
+        //given
+        TxTestEntity original = new TxTestEntity("originalName", "originalEmail");
+        TxTestEntity save = txTestRepository.save(original);
+
+        //when
+        //then
+        assertThrows(IllegalArgumentException.class, () -> {
+            txTestService.rollbackTestWithongoTx(save.getId(), "changeName");
         });
 
         TxTestEntity nextEntity = txTestRepository.findById(original.getId()).get();

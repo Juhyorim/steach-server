@@ -15,7 +15,6 @@ import com.twentyone.steachserver.global.error.ResourceNotFoundException;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -267,7 +266,6 @@ public class  QuizServiceImpl implements QuizService {
     }
 
     @Transactional
-    @Async
     @Override
     public QuizStatisticDtoV2 getStatisticsV2(Integer quizId) {
         /*

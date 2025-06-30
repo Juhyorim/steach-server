@@ -8,7 +8,6 @@ import com.twentyone.steachserver.domain.lecture.dto.AllLecturesInCurriculaRespo
 import com.twentyone.steachserver.domain.lecture.service.LectureService;
 import com.twentyone.steachserver.domain.member.model.Student;
 import com.twentyone.steachserver.domain.member.model.Teacher;
-import com.twentyone.steachserver.domain.member.repository.TeacherRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +36,7 @@ public class CurriculumController {
         return ResponseEntity.ok(detail);
     }
 
-    @Secured("ROLE_TEACHER")
+    @PreAuthorize("hasRole('ROLE_TEACHER')")
     @Operation(summary = "[강사] 커리큘럼 생성!", description = "category종류: KOREAN, MATH, FOREIGN_LANGUAGE, SCIENCE, ENGINEERING, ARTS_AND_PHYSICAL, SOCIAL, ETC")
     @PostMapping
     public ResponseEntity<CurriculumDetailResponse> createCurriculum(
@@ -47,7 +47,7 @@ public class CurriculumController {
         return ResponseEntity.ok(curriculumDetailResponse);
     }
 
-    @Secured("ROLE_STUDENT")
+    @PreAuthorize("hasRole('ROLE_STUDENT')")
     @Operation(summary = "[학생] 커리큘럼 수강신청!")
     @PostMapping("/{curricula_id}/apply")
     public ResponseEntity<Void> registration(@AuthenticationPrincipal LoginCredential credential,

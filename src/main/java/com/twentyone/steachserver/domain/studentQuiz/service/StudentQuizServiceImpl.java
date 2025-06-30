@@ -1,7 +1,6 @@
 package com.twentyone.steachserver.domain.studentQuiz.service;
 
 import com.twentyone.steachserver.domain.member.model.Student;
-import com.twentyone.steachserver.domain.quiz.dto.QuizStatisticDto;
 import com.twentyone.steachserver.domain.quiz.model.Quiz;
 import com.twentyone.steachserver.domain.quiz.model.QuizChoice;
 import com.twentyone.steachserver.domain.quiz.model.QuizStatistics;
@@ -16,12 +15,14 @@ import com.twentyone.steachserver.domain.studentQuiz.model.StudentQuizId;
 import com.twentyone.steachserver.domain.studentQuiz.repository.StudentQuizRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -117,6 +118,7 @@ public class StudentQuizServiceImpl implements StudentQuizService {
             quizRedisService.updateUserQuizScore(quiz.getLecture(), student, newStudentQuiz.getScore()); //랭킹 점수 갱신
             quizRedisService.updateQuizChoiceCount(quiz, quizChoice); //선택지 카운트 증가
         } catch (RuntimeException e) {
+            log.error("통계생성 실패");
             //pass
         }
     }
